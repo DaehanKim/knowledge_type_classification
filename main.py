@@ -1,8 +1,11 @@
 # GRU attention knowledge type classification
 import torch
+import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
 from kor2vec import Kor2Vec
+from collections import Counter
+from sklearn.metrics import confusion_matrix
 
 # custom modules
 from loader import *
@@ -27,7 +30,7 @@ def train_epoch(model_wrap, train_loader, val_loader):
 
 
 
-def test(model_wrap, test_loader):
+def test(model_wrap, test_loader, print_confusion_matrix=False):
 	model_wrap.model.eval()
 	
 	correct = 0.
@@ -40,8 +43,24 @@ def test(model_wrap, test_loader):
 		running_loss += loss.item()
 		num_sample += out.size(0)
 
+	if print_confusion_matrix:
+		print(*cm(model_wrap, test_loader), sep='\n')
+
 	return correct/num_sample, running_loss/num_sample
 
+
+def cm(model_wrap, test_loader):
+	model_wrap.model.eval()
+	
+	pred_y, true_y = [], []
+	for batch in test_loader:
+		out = model_wrap.model(batch[0])
+		pred_y.append(out.max(dim=1)[1])
+		true_y.append(batch[1])
+
+	existing_types = Counter(np.concatenate(pred_y + true_y)).keys()
+
+	return existing_types, confusion_matrix(np.concatenate(pred_y), np.concatenate(true_y))
 
 def main():
 
@@ -53,7 +72,7 @@ def main():
 
 	for epoch in range(NUM_EPOCH):
 		train_epoch(model, loader.train, loader.val)
-	acc, loss_ = test(model, loader.test)
+	acc, loss_ = test(model, loader.test, print_confusion_matrix=True)
 	print('test - accuracy : {:.4f} | loss : {:.6f}'.format(acc, loss_))	
 
 
