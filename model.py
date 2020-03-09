@@ -12,8 +12,8 @@ class GRU_ATT(nn.Module):
 	def __init__(self):
 		super(GRU_ATT, self).__init__()
 		self.rnn = nn.GRU(WORD_DIM,HIDDEN_DIM,NUM_LAYER, batch_first = True, bidirectional = BIDIRECTIONAL)
-		self.att_layer = nn.Linear(HIDDEN_DIM, 1)
-		self.fc = nn.Sequential(nn.Linear(HIDDEN_DIM, 5), nn.LogSoftmax(dim=1)) # definition, process, property, example, the others
+		self.att_layer = nn.Linear(HIDDEN_DIM*(int(BIDIRECTIONAL)+1), 1)
+		self.fc = nn.Sequential(nn.Linear(HIDDEN_DIM*(int(BIDIRECTIONAL)+1), 5), nn.LogSoftmax(dim=1)) # definition, process, property, example, the others
 		self.hidden = None
 
 	def forward(self, x):

@@ -13,6 +13,7 @@ knowledge type classification using GRU+Attention mechanism
 
  - ~dropout in the embedding layer~ --> dropout implemented
  - ~learning rate scheduling~ --> reduceLROnPleateau
+ - ~bidirectional encoder~
  - visdualizing/showing prediction for test instances
  - ensure dataset labels are correct
 
