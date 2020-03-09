@@ -11,11 +11,15 @@ knowledge type classification using GRU+Attention mechanism
 
 ## To be implemented
 
- - dropout in the embedding layer
- - learning rate scheduling
+ - ~dropout in the embedding layer~ --> dropout implemented
+ - ~learning rate scheduling~ --> reduceLROnPleateau
  - visdualizing/showing prediction for test instances
  - ensure dataset labels are correct
 
 ## Initial Result
 
  ![image](initial_result.PNG)
+
+## Version Log
+
+  - Refactored each modules into several files
