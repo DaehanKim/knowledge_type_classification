@@ -19,6 +19,7 @@ class LOADER:
 		with open('txt_clf_data.tsv','rt',encoding = 'utf8') as f:
 			data = f.readlines()
 		data = [item.strip().split('\t') for item in data]
+		data = [item for item in data if len(item) == 2]
 
 		X = np.array(data)[:, 0]
 		grp = np.array(data)[:, -1]
