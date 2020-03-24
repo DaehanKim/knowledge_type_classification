@@ -25,7 +25,7 @@ class LOADER:
 		X = np.array(data)[:, 0]
 		grp = np.array(data)[:, -1]
 
-		sss = StratifiedShuffleSplit(n_splits=1, test_size=TEST_RATIO * 2, random_state=SEED)
+		sss = StratifiedShuffleSplit(n_splits=1, test_size=test_ratio * 2, random_state=SEED)
 
 		for train_idx, test_idx in sss.split(X, grp):  # split train set and (test set + valid set)
 			trainX = X[train_idx]
@@ -75,11 +75,13 @@ class LOADER:
 		with open('txt_clf_data.tsv','rt',encoding = 'utf8') as f:
 			data = f.readlines()
 		data = [item.strip().split('\t') for item in data]
+		data = [item for item in data if len(item) == 2]
+
 
 		X = np.array(data)[:, 0]
 		grp = np.array(data)[:, -1]
 
-		sss = StratifiedShuffleSplit(n_splits=1, test_size=TEST_RATIO * 2, random_state=SEED)
+		sss = StratifiedShuffleSplit(n_splits=1, test_size=test_ratio * 2, random_state=SEED)
 
 		for train_idx, test_idx in sss.split(X, grp):  # split train set and (test set + valid set)
 			trainX = X[train_idx]

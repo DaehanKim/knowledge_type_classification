@@ -3,6 +3,7 @@ import random
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 # custom module
 from config import *
@@ -18,10 +19,19 @@ class GRU_ATT(nn.Module):
 
 	def forward(self, x):
 		# x : batch x seq_len x word_dim
-		x = F.dropout(x, p = DROPOUT_RATE, training=self.training)
-		out, ht = self.rnn(x, self.hidden[:,:x.size(0),:])
-		att_weight = F.softmax(self.att_layer(out), dim = 2)
-		att_applied = (att_weight * out).sum(1)
+		# get seq len, sort
+		mask = ~torch.eq(x[:,:,0], torch.zeros(*x.size()[:-1]))
+		seq_len = mask.sum(1)
+		seq_lengths, perm_idx = seq_len.sort(0, descending=True)
+		x = x[perm_idx]
+
+		x = F.dropout(x, p = DROPOUT_RATE, training=self.training)		
+		packed_input = pack_padded_sequence(x, seq_lengths.cpu().numpy(), batch_first = True)
+		packed_out, ht = self.rnn(packed_input, self.hidden[:,:x.size(0),:])
+		padded_output, input_sizes = pad_packed_sequence(packed_out, batch_first= True)
+		att_logits =  self.att_layer(padded_output) + ~mask.unsqueeze(2)*SOFTMAX_PAD_CONSTANT 
+		att_weight = F.softmax(att_logits, dim = 2)
+		att_applied = (att_weight * padded_output).sum(1)
 		logit = self.fc(att_applied)
 		return logit
 
