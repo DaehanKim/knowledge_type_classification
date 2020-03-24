@@ -22,7 +22,7 @@ def train_epoch(model_wrap, test_raw, train_loader, val_loader):
 		loss = model_wrap.criterion(out, batch[1])
 		loss.backward(retain_graph=True)
 		model_wrap.optimizer.step()
-		model_wrap.scheduler.step(loss.item())
+		# model_wrap.scheduler.step(loss.item())
 
 	# do validation to do early stopping
 	acc, loss_ = test(model_wrap, test_raw, val_loader)
