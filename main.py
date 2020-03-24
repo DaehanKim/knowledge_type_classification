@@ -18,11 +18,11 @@ def train_epoch(model_wrap, test_raw, train_loader, val_loader):
 
 	for batch in train_loader:
 		model_wrap.optimizer.zero_grad()
-		out = model_wrap.model(batch[0])
-		loss = model_wrap.criterion(out, batch[1])
+		out, perm_idx = model_wrap.model(batch[0])
+		loss = model_wrap.criterion(out, batch[1][perm_idx])
 		loss.backward(retain_graph=True)
 		model_wrap.optimizer.step()
-		model_wrap.scheduler.step(loss.item())
+		# model_wrap.scheduler.step(loss.item())
 
 	# do validation to do early stopping
 	acc, loss_ = test(model_wrap, test_raw, val_loader)
@@ -37,9 +37,9 @@ def test(model_wrap, test_raw, test_loader, print_confusion_matrix=False, print_
 	running_loss = 0.
 	num_sample = 0.
 	for batch in test_loader:
-		out = model_wrap.model(batch[0])
-		loss = model_wrap.criterion(out, batch[1])
-		correct += (out.max(dim=1)[1] == batch[1]).sum()
+		out, perm_idx = model_wrap.model(batch[0])
+		loss = model_wrap.criterion(out, batch[1][perm_idx])
+		correct += (out.max(dim=1)[1] == batch[1][perm_idx]).sum()
 		running_loss += loss.item()
 		num_sample += out.size(0)
 
@@ -56,9 +56,9 @@ def cm(model_wrap, test_raw, test_loader, print_test_set=False):
 	pred_y, true_y = [], []
 
 	for batch in test_loader:
-		out = model_wrap.model(batch[0])
-		pred_y.append(out.max(dim=1)[1])
-		true_y.append(batch[1])
+		out, perm_idx = model_wrap.model(batch[0])
+		pred_y.append(out.max(dim=1)[1][perm_idx])
+		true_y.append(batch[1][perm_idx])
 
 	# For printing
 	# -------------------------------------------------------------------------------------------------------------#
