@@ -14,6 +14,7 @@ class LOADER:
 		self.zero_pad = lambda seq : torch.cat([seq, torch.zeros(MAX_SEQ_LEN-seq.size(0),WORD_DIM)], dim=0)
 		self.trim = lambda seq : seq[:MAX_SEQ_LEN,:].contiguous()
 		self.train, self.val, self.test = self.get_data_loader(test_ratio=TEST_RATIO)
+		self.test_raw = self.get_raw_data(test_ratio=TEST_RATIO) # for test
 
 	def get_data_loader(self, test_ratio):
 		with open('txt_clf_data.tsv','rt',encoding = 'utf8') as f:
@@ -68,3 +69,32 @@ class LOADER:
 
 
 		return train, val, test
+
+	# To get raw data
+	def get_raw_data(self, test_ratio):
+		with open('txt_clf_data.tsv','rt',encoding = 'utf8') as f:
+			data = f.readlines()
+		data = [item.strip().split('\t') for item in data]
+
+		X = np.array(data)[:, 0]
+		grp = np.array(data)[:, -1]
+
+		sss = StratifiedShuffleSplit(n_splits=1, test_size=TEST_RATIO * 2, random_state=SEED)
+
+		for train_idx, test_idx in sss.split(X, grp):  # split train set and (test set + valid set)
+			trainX = X[train_idx]
+			testX_sample = X[test_idx]
+			trainY = grp[train_idx]
+			testY_sample = grp[test_idx]
+
+		sss = StratifiedShuffleSplit(n_splits=1, test_size=0.5, random_state=SEED)
+
+		for test_idx, valid_idx in sss.split(testX_sample, testY_sample):  # split test set and valid set
+			testX = testX_sample[test_idx]
+			validX = testX_sample[valid_idx]
+			testY = testY_sample[test_idx]
+			validY = testY_sample[valid_idx]
+
+		test = DataLoader(testX, batch_size=BATCH_SIZE)
+
+		return test

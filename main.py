@@ -13,7 +13,7 @@ from model import *
 from config import *
 
 # train/ test logic
-def train_epoch(model_wrap, train_loader, val_loader):
+def train_epoch(model_wrap, test_raw, train_loader, val_loader):
 	model_wrap.model.train()
 
 	for batch in train_loader:
@@ -25,12 +25,12 @@ def train_epoch(model_wrap, train_loader, val_loader):
 		model_wrap.scheduler.step(loss.item())
 
 	# do validation to do early stopping
-	acc, loss_ = test(model_wrap, val_loader)
+	acc, loss_ = test(model_wrap, test_raw, val_loader)
 	print('val - accuracy : {:.4f} | loss : {:.6f}'.format(acc, loss_))
 
 
 
-def test(model_wrap, test_loader, print_confusion_matrix=False):
+def test(model_wrap, test_raw, test_loader, print_confusion_matrix=False, print_test_set=False):
 	model_wrap.model.eval()
 	
 	correct = 0.
@@ -44,21 +44,40 @@ def test(model_wrap, test_loader, print_confusion_matrix=False):
 		num_sample += out.size(0)
 
 	if print_confusion_matrix:
-		print(*cm(model_wrap, test_loader), sep='\n')
+		print(*cm(model_wrap, test_raw, test_loader, print_test_set), sep='\n')
+
 
 	return correct/num_sample, running_loss/num_sample
 
 
-def cm(model_wrap, test_loader):
+def cm(model_wrap, test_raw, test_loader, print_test_set=False):
 	model_wrap.model.eval()
 	
 	pred_y, true_y = [], []
+
 	for batch in test_loader:
 		out = model_wrap.model(batch[0])
 		pred_y.append(out.max(dim=1)[1])
 		true_y.append(batch[1])
 
+	# For printing
+	# -------------------------------------------------------------------------------------------------------------#
+	if print_test_set:
+		relevant_cols = ['정의', '과정', '성질', '예', '흥미유발']
+		label_map = dict(zip(range(5), relevant_cols))
+		printing = []
+		index = 0
+		for batch in test_raw:
+			printing.append(batch)
+			index += 1
+		for i in range(len(printing)):
+			for j in range(len(printing[i])):
+				if pred_y[i][j] != true_y[i][j]:
+					print(printing[i][j]+" 예측: "+label_map[int(pred_y[i][j])]+", 실제: "+label_map[int(true_y[i][j])])
+	# -------------------------------------------------------------------------------------------------------------#
+
 	existing_types = Counter(np.concatenate(pred_y + true_y)).keys()
+	print(Counter(np.concatenate(true_y)))
 
 	return existing_types, confusion_matrix(np.concatenate(pred_y), np.concatenate(true_y))
 
@@ -71,8 +90,8 @@ def main():
 	loader = LOADER(word_emb)
 
 	for epoch in range(NUM_EPOCH):
-		train_epoch(model, loader.train, loader.val)
-	acc, loss_ = test(model, loader.test, print_confusion_matrix=True)
+		train_epoch(model, loader.test_raw, loader.train, loader.val)
+	acc, loss_ = test(model, loader.test_raw, loader.test, print_confusion_matrix=True, print_test_set=True)
 	print('test - accuracy : {:.4f} | loss : {:.6f}'.format(acc, loss_))	
 
 
