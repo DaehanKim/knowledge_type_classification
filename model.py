@@ -18,9 +18,11 @@ class GRU_ATT(nn.Module):
 
 	def forward(self, x):
 		# x : batch x seq_len x word_dim
+		mask = ~torch.eq(x[:,:,0], torch.zeros(*x.size()[:-1]))
 		x = F.dropout(x, p = DROPOUT_RATE, training=self.training)
 		out, ht = self.rnn(x, self.hidden[:,:x.size(0),:])
-		att_weight = F.softmax(self.att_layer(out), dim = 2)
+		att_weight = F.softmax(self.att_layer(out), dim = 1)
+		att_weight = att_weight*mask.unsqueeze(2) / (att_weight*mask.unsqueeze(2)).sum(1,keepdim=True)
 		att_applied = (att_weight * out).sum(1)
 		logit = self.fc(att_applied)
 		return logit
