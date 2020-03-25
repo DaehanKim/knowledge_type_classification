@@ -62,11 +62,10 @@ class LOADER:
 		# val = DataLoader(data[test_idx:test_idx * 2], batch_size=BATCH_SIZE)
 		# test = DataLoader(data[:test_idx], batch_size=BATCH_SIZE)
 
+
 		train = DataLoader(trainM, batch_size=BATCH_SIZE)
 		val = DataLoader(validM, batch_size=BATCH_SIZE)
 		test = DataLoader(testM, batch_size=BATCH_SIZE)
-
-
 
 		return train, val, test
 

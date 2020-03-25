@@ -35,5 +35,5 @@ class GRU_ATT_WRAP:
 		self.model = model
 		self.model.hidden = self.model.init_hidden()
 		self.optimizer = torch.optim.Adam(model.parameters(), lr = LEARNING_RATE)
-		self.scheduler = ReduceLROnPlateau(self.optimizer, mode = 'min', patience=10)
+		self.scheduler = ReduceLROnPlateau(self.optimizer, mode='min', patience=10)
 		self.criterion = nn.NLLLoss()

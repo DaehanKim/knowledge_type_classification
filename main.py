@@ -3,6 +3,8 @@ import torch
 import numpy as np
 import torch.nn as nn
 import torch.nn.functional as F
+import matplotlib.pyplot as plt
+import datetime
 from kor2vec import Kor2Vec
 from collections import Counter
 from sklearn.metrics import confusion_matrix
@@ -11,9 +13,10 @@ from sklearn.metrics import confusion_matrix
 from loader import *
 from model import *
 from config import *
+from earlystopping import *
 
 # train/ test logic
-def train_epoch(model_wrap, test_raw, train_loader, val_loader):
+def train_epoch(model_wrap, test_raw, train_loader, val_loader, early_stopping):
 	model_wrap.model.train()
 
 	for batch in train_loader:
@@ -28,6 +31,7 @@ def train_epoch(model_wrap, test_raw, train_loader, val_loader):
 	acc, loss_ = test(model_wrap, test_raw, val_loader)
 	print('val - accuracy : {:.4f} | loss : {:.6f}'.format(acc, loss_))
 
+	early_stopping(loss_, model_wrap)
 
 
 def test(model_wrap, test_raw, test_loader, print_confusion_matrix=False, print_test_set=False):
@@ -43,6 +47,8 @@ def test(model_wrap, test_raw, test_loader, print_confusion_matrix=False, print_
 		running_loss += loss.item()
 		num_sample += out.size(0)
 
+
+
 	if print_confusion_matrix:
 		print(*cm(model_wrap, test_raw, test_loader, print_test_set), sep='\n')
 
@@ -54,11 +60,11 @@ def cm(model_wrap, test_raw, test_loader, print_test_set=False):
 	model_wrap.model.eval()
 	
 	pred_y, true_y = [], []
-
 	for batch in test_loader:
 		out = model_wrap.model(batch[0])
 		pred_y.append(out.max(dim=1)[1])
 		true_y.append(batch[1])
+
 
 	# For printing
 	# -------------------------------------------------------------------------------------------------------------#
@@ -89,10 +95,13 @@ def main():
 	model = GRU_ATT_WRAP(rnn_clf)
 	loader = LOADER(word_emb)
 
+	early_stopping = EarlyStopping(verbose=True, delta=DELTA)
+
 	for epoch in range(NUM_EPOCH):
-		train_epoch(model, loader.test_raw, loader.train, loader.val)
+		train_epoch(model, loader.test_raw, loader.train, loader.val, early_stopping)
+
 	acc, loss_ = test(model, loader.test_raw, loader.test, print_confusion_matrix=True, print_test_set=True)
-	print('test - accuracy : {:.4f} | loss : {:.6f}'.format(acc, loss_))	
+	print('test - accuracy : {:.4f} | loss : {:.6f}'.format(acc, loss_))
 
 
 if __name__ == '__main__':

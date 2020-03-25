@@ -2,9 +2,10 @@
 import pandas as pd 
 import numpy as np
 import math
+import re
 
 def extract_data_list():
-	relevant_cols = ['정의','과정','성질','예','흥미유발']
+	relevant_cols = ['정의','과정','성질','예']
 	label_map = dict(zip(relevant_cols, range(5)))
 
 	src1 = pd.read_excel('중1.xlsx', sheet_name='Merge')
@@ -28,15 +29,15 @@ def extract_data_list():
 		flag = True # 기타나 참고의 chunk를 데이터에 안넣기 위한 flag
 		for i in range(counts):
 			if src["단위지식 type"][i]:
-				if src["단위지식 type"][i] != "기타" and src["단위지식 type"][i] != "참고":
-					data_list += [(src["train_original"][i], label_map[src["단위지식 type"][i]])]
+				if src["단위지식 type"][i] != "기타" and src["단위지식 type"][i] != "참고" and src["단위지식 type"][i] != "흥미유발":
+					data_list += [(src["train_original"][i].replace("- ", "", 1), label_map[src["단위지식 type"][i]])]
 					flag = True
 				else:
 					flag = False
 			else:
 				if flag:
 					temp = list(data_list[-1])
-					data_list[-1] = (temp[0]+" "+src["train_original"][i], temp[1])
+					data_list[-1] = (temp[0]+" "+src["train_original"][i].replace("- ", "", 1), temp[1])
 
 
 	print('Relevant Columns : {}'.format(' '.join(relevant_cols)))
