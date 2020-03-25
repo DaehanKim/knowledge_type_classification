@@ -20,8 +20,6 @@ def extract_data_list():
 	# add "한시에 데이터를 만들자"
 	sheet_names = ["상효", "은지", "두희", "대한", "영근", "상헌", "근형", "민경"]
 	for name in sheet_names:
-		if name == "상효" or name == "은지": # 데이터가...
-			continue
 		src_list.append(pd.read_excel("한시에 데이터를 만들자.xlsx", sheet_name=name, header=1, keep_default_na=False))
 
 	for index in range(nums, len(src_list)):
